@@ -19,6 +19,7 @@ import {
   FileDown,
   Quote,
   Code,
+  Table as TableIcon,
 } from 'lucide-react';
 import HeadingDropdown from './HeadingDropdown';
 import FontFamilyDropdown from './FontFamilyDropdown';
@@ -158,6 +159,14 @@ export default function Toolbar({
           title="Insert Image"
         >
           <ImagePlus />
+        </button>
+        <button
+          type="button"
+          className="rte-toolbar-btn"
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          title="Insert Table"
+        >
+          <TableIcon />
         </button>
         <input
           type="file"

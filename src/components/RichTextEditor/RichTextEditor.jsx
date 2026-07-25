@@ -4,7 +4,6 @@ import {
   useState,
   useCallback,
   useRef,
-  useEffect,
 } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -12,12 +11,13 @@ import TextAlign from '@tiptap/extension-text-align';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TaskList, TaskItem } from '@tiptap/extension-list';
+import { CustomTable, CustomTableRow, CustomTableHeader, CustomTableCell } from './extensions/TableExtensions';
 
 import ResizableImage from './ImageResizeWrapper';
 import Toolbar from './Toolbar';
 import BubbleToolbar from './BubbleToolbar';
+import TableContextMenu from './TableContextMenu';
 import './RichTextEditor.css';
-
 
 const RichTextEditor = forwardRef(function RichTextEditor(
   { initialContent = '', placeholder = 'Start typing your document...', onChange },
@@ -26,6 +26,7 @@ const RichTextEditor = forwardRef(function RichTextEditor(
   const [globalFont, setGlobalFont] = useState('');
   const [globalBgColor, setGlobalBgColor] = useState('');
   const [counts, setCounts] = useState({ words: 0, chars: 0 });
+  const [tableContextMenu, setTableContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const editorContainerRef = useRef(null);
 
   const isClient = typeof window !== 'undefined';
@@ -53,6 +54,12 @@ const RichTextEditor = forwardRef(function RichTextEditor(
       TaskItem.configure({
         nested: true,
       }),
+      CustomTable.configure({
+        resizable: true,
+      }),
+      CustomTableRow,
+      CustomTableHeader,
+      CustomTableCell,
       ResizableImage,
     ],
     content: initialContent,
@@ -145,8 +152,23 @@ const RichTextEditor = forwardRef(function RichTextEditor(
   const wordCount = counts.words;
   const charCount = counts.chars;
 
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    if (!editor) return;
+
+    if (e.target.closest('td') || e.target.closest('th') || e.target.closest('table')) {
+      const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+      if (pos && pos.pos) {
+        editor.commands.setTextSelection(pos.pos);
+      }
+      setTableContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+    } else {
+      setTableContextMenu({ visible: false, x: 0, y: 0 });
+    }
+  };
+
   return (
-    <div className="rte-container" id="rte-container">
+    <div className="rte-container" id="rte-container" onContextMenu={handleContextMenu}>
       <Toolbar
         editor={editor}
         globalFont={globalFont}
@@ -158,6 +180,11 @@ const RichTextEditor = forwardRef(function RichTextEditor(
       />
 
       <BubbleToolbar editor={editor} />
+      <TableContextMenu 
+        editor={editor} 
+        position={tableContextMenu} 
+        onClose={() => setTableContextMenu((prev) => ({ ...prev, visible: false }))} 
+      />
 
       <div
         className="rte-editor-canvas"
