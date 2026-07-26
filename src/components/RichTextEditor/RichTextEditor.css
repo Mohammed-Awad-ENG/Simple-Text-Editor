@@ -224,21 +224,24 @@
 .rte-editor-canvas .tiptap {
 
   width: 100%;
-  max-width: 816px; 
-  min-height: 1056px; 
+  max-width: var(--page-width, 816px); 
+  min-height: var(--page-min-height, 1056px); 
   margin: 0 auto;
 
   background: var(--page-bg, #ffffff);
   border-radius: 2px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
 
-  padding: 96px;
+  padding-top: var(--page-padding-top, 96px);
+  padding-right: var(--page-padding-right, 96px);
+  padding-bottom: var(--page-padding-bottom, 96px);
+  padding-left: var(--page-padding-left, 96px);
 
   outline: none;
   font-family: var(--page-font, inherit);
-  color: #1a1a2e; 
-  line-height: 1.5;
-  font-size: 1.05rem;
+  color: var(--page-text-color, #1a1a2e); 
+  line-height: var(--page-line-height, 1.5);
+  font-size: var(--page-font-size, 1.05rem);
 }
 
 .rte-editor-canvas .tiptap p.is-editor-empty:first-child::before {

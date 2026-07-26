@@ -17,6 +17,7 @@ import ResizableImage from './ImageResizeWrapper';
 import Toolbar from './Toolbar';
 import BubbleToolbar from './BubbleToolbar';
 import TableContextMenu from './TableContextMenu';
+import PaperContextMenu from './PaperContextMenu';
 import './RichTextEditor.css';
 
 const RichTextEditor = forwardRef(function RichTextEditor(
@@ -27,6 +28,20 @@ const RichTextEditor = forwardRef(function RichTextEditor(
   const [globalBgColor, setGlobalBgColor] = useState('');
   const [counts, setCounts] = useState({ words: 0, chars: 0 });
   const [tableContextMenu, setTableContextMenu] = useState({ visible: false, x: 0, y: 0 });
+  const [paperContextMenu, setPaperContextMenu] = useState({ visible: false, x: 0, y: 0 });
+  const [paperSettings, setPaperSettings] = useState({
+    bgColor: '#ffffff',
+    textColor: '#1a1a2e',
+    paddingTop: '96',
+    paddingRight: '96',
+    paddingBottom: '96',
+    paddingLeft: '96',
+    pageWidth: '816px',
+    pageMinHeight: '1056px',
+    fontFamily: '',
+    fontSize: '1.05',
+    lineHeight: '1.5',
+  });
   const editorContainerRef = useRef(null);
 
   const isClient = typeof window !== 'undefined';
@@ -156,14 +171,17 @@ const RichTextEditor = forwardRef(function RichTextEditor(
     e.preventDefault();
     if (!editor) return;
 
+    setTableContextMenu({ visible: false, x: 0, y: 0 });
+    setPaperContextMenu({ visible: false, x: 0, y: 0 });
+
     if (e.target.closest('td') || e.target.closest('th') || e.target.closest('table')) {
       const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
       if (pos && pos.pos) {
         editor.commands.setTextSelection(pos.pos);
       }
       setTableContextMenu({ visible: true, x: e.clientX, y: e.clientY });
-    } else {
-      setTableContextMenu({ visible: false, x: 0, y: 0 });
+    } else if (e.target.closest('.rte-editor-canvas')) {
+      setPaperContextMenu({ visible: true, x: e.clientX, y: e.clientY });
     }
   };
 
@@ -185,13 +203,28 @@ const RichTextEditor = forwardRef(function RichTextEditor(
         position={tableContextMenu} 
         onClose={() => setTableContextMenu((prev) => ({ ...prev, visible: false }))} 
       />
+      <PaperContextMenu
+        position={paperContextMenu}
+        onClose={() => setPaperContextMenu((prev) => ({ ...prev, visible: false }))}
+        paperSettings={paperSettings}
+        onApply={(newSettings) => setPaperSettings(newSettings)}
+      />
 
       <div
         className="rte-editor-canvas"
         ref={editorContainerRef}
         style={{
-          '--page-font': globalFont || undefined,
-          '--page-bg': globalBgColor || undefined,
+          '--page-font': globalFont || paperSettings.fontFamily || undefined,
+          '--page-bg': globalBgColor || paperSettings.bgColor || undefined,
+          '--page-text-color': paperSettings.textColor || undefined,
+          '--page-padding-top': paperSettings.paddingTop + 'px',
+          '--page-padding-right': paperSettings.paddingRight + 'px',
+          '--page-padding-bottom': paperSettings.paddingBottom + 'px',
+          '--page-padding-left': paperSettings.paddingLeft + 'px',
+          '--page-width': paperSettings.pageWidth || undefined,
+          '--page-min-height': paperSettings.pageMinHeight || undefined,
+          '--page-font-size': paperSettings.fontSize + 'rem',
+          '--page-line-height': paperSettings.lineHeight || undefined,
         }}
         onClick={(e) => {
           if (e.target.classList.contains('rte-editor-canvas')) {
