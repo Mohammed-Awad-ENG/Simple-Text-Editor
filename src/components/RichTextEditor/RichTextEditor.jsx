@@ -5,7 +5,23 @@ import {
   useCallback,
   useRef,
 } from 'react';
+import { Plus, ImagePlus } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import Document from '@tiptap/extension-document';
+import { Node, mergeAttributes } from '@tiptap/core';
+
+const PageNode = Node.create({
+  name: 'page',
+  group: 'block',
+  content: 'block+',
+  parseHTML() {
+    return [{ tag: 'div.paper-page' }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes, { class: 'paper-page' }), 0];
+  },
+});
+
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyleKit } from '@tiptap/extension-text-style';
@@ -19,6 +35,7 @@ import BubbleToolbar from './BubbleToolbar';
 import TableContextMenu from './TableContextMenu';
 import PaperContextMenu from './PaperContextMenu';
 import './RichTextEditor.css';
+import { NodeSelection } from '@tiptap/pm/state';
 
 const RichTextEditor = forwardRef(function RichTextEditor(
   { initialContent = '', placeholder = 'Start typing your document...', onChange },
@@ -43,11 +60,22 @@ const RichTextEditor = forwardRef(function RichTextEditor(
     lineHeight: '1.5',
   });
   const editorContainerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const isClient = typeof window !== 'undefined';
 
+
+
+  let formattedContent = initialContent;
+  if (formattedContent && !formattedContent.includes('class="paper-page"')) {
+    formattedContent = `<div class="paper-page">${formattedContent}</div>`;
+  } else if (!formattedContent) {
+    formattedContent = `<div class="paper-page"><p></p></div>`;
+  }
+
   const editor = useEditor({
     extensions: [
+      PageNode,
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
         link: {
@@ -77,7 +105,7 @@ const RichTextEditor = forwardRef(function RichTextEditor(
       CustomTableCell,
       ResizableImage,
     ],
-    content: initialContent,
+    content: formattedContent,
     editorProps: {
       attributes: {
         class: 'tiptap',
@@ -98,9 +126,57 @@ const RichTextEditor = forwardRef(function RichTextEditor(
         words: text.split(/\s+/).filter(Boolean).length,
         chars: text.length,
       });
+
+      if (ed.isEmpty) {
+        ed.commands.setContent('<div class="paper-page"><p></p></div>');
+      }
     },
     immediatelyRender: false,
   }, []);
+
+  const handleImageUpload = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+const handleFileChange = useCallback(
+  (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const { schema } = editor.state;
+      const imageType = schema.nodes.image;
+      if (!imageType) return;
+
+      const imageNode = imageType.create({
+        src: reader.result,
+        alt: file.name,
+      });
+
+      // Insert as its own top-level node — a sibling of "page" per the
+      // doc schema `(page | image)+` — never wrapped inside a page.
+      const endPos = editor.state.doc.content.size;
+      let tr = editor.state.tr.insert(endPos, imageNode);
+      tr = tr.setSelection(NodeSelection.create(tr.doc, endPos));
+      editor.view.dispatch(tr);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  },
+  [editor]
+);
+
+  const handleAddPage = useCallback(() => {
+    if (!editor) return;
+    editor.chain()
+      .insertContentAt(editor.state.doc.content.size, {
+        type: 'page',
+        content: [{ type: 'paragraph' }]
+      })
+      .focus('end')
+      .run();
+  }, [editor]);
 
   useImperativeHandle(
     ref,
@@ -174,16 +250,35 @@ const RichTextEditor = forwardRef(function RichTextEditor(
     setTableContextMenu({ visible: false, x: 0, y: 0 });
     setPaperContextMenu({ visible: false, x: 0, y: 0 });
 
-    if (e.target.closest('td') || e.target.closest('th') || e.target.closest('table')) {
+    const isImageClicked = e.target.tagName === 'IMG' || e.target.closest('.image-resize-wrapper');
+
+    if (!isImageClicked && (e.target.closest('td') || e.target.closest('th') || e.target.closest('table'))) {
       const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
       if (pos && pos.pos) {
         editor.commands.setTextSelection(pos.pos);
       }
       setTableContextMenu({ visible: true, x: e.clientX, y: e.clientY });
-    } else if (e.target.closest('.rte-editor-canvas')) {
+    } else if (e.target.closest('.paper-page') || e.target.closest('.image-resize-node')) {
+      const isImage = e.target.closest('.image-resize-node');
+      if (!isImage) {
+        const pos = editor.view.posAtCoords({ left: e.clientX, top: e.clientY });
+        if (pos && pos.pos) {
+          editor.commands.setTextSelection(pos.pos);
+        }
+      }
       setPaperContextMenu({ visible: true, x: e.clientX, y: e.clientY });
     }
   };
+
+  const handleDeletePage = useCallback(() => {
+    if (!editor) return;
+    if (editor.isActive('image')) {
+      editor.commands.deleteSelection();
+    } else {
+      editor.commands.deleteNode('page');
+    }
+    setPaperContextMenu((prev) => ({ ...prev, visible: false }));
+  }, [editor]);
 
   return (
     <div className="rte-container" id="rte-container" onContextMenu={handleContextMenu}>
@@ -208,6 +303,7 @@ const RichTextEditor = forwardRef(function RichTextEditor(
         onClose={() => setPaperContextMenu((prev) => ({ ...prev, visible: false }))}
         paperSettings={paperSettings}
         onApply={(newSettings) => setPaperSettings(newSettings)}
+        onDeletePage={handleDeletePage}
       />
 
       <div
@@ -233,6 +329,24 @@ const RichTextEditor = forwardRef(function RichTextEditor(
         }}
       >
         <EditorContent editor={editor} />
+        
+        <div className="canvas-footer-actions">
+          <button className="add-page-btn dashed-border-btn" onClick={handleAddPage}>
+            <Plus size={20} />
+            <span>Add New Page</span>
+          </button>
+          <button className="add-img-btn dashed-border-btn" onClick={handleImageUpload}>
+            <ImagePlus size={20} />
+            <span>Add Image</span>
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+        </div>
       </div>
 
       <div className="rte-status-bar">

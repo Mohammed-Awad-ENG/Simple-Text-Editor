@@ -5,6 +5,7 @@ import {
   Maximize,
   Type,
   RotateCcw,
+  Trash2,
 } from 'lucide-react';
 
 const PAGE_SIZES = [
@@ -34,7 +35,7 @@ const labelStyle = {
   fontWeight: 500,
 };
 
-export default function PaperContextMenu({ position, onClose, paperSettings, onApply }) {
+export default function PaperContextMenu({ position, onClose, paperSettings, onApply, onDeletePage }) {
   const menuRef = useRef(null);
   const [view, setView] = useState('main');
 
@@ -171,6 +172,9 @@ export default function PaperContextMenu({ position, onClose, paperSettings, onA
           <div style={{ borderTop: '1px solid var(--border-dark)', margin: '4px 0' }} />
           <button type="button" className="rte-dropdown-item" style={{ ...btnStyle, color: 'var(--text-muted)' }} onClick={handleReset}>
             <RotateCcw style={iconSize} /> Reset to Default
+          </button>
+          <button type="button" className="rte-dropdown-item" style={{ ...btnStyle, color: '#ef4444' }} onClick={onDeletePage}>
+            <Trash2 style={iconSize} /> Delete Page/Image
           </button>
         </div>
       )}

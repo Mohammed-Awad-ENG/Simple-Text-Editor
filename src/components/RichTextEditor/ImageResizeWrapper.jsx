@@ -3,12 +3,20 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import { useState, useRef, useCallback, useEffect } from 'react';
 
 
-function ResizableImageComponent({ node, updateAttributes, selected }) {
+function ResizableImageComponent({ node, updateAttributes, selected, getPos, editor }) {
   const [resizing, setResizing] = useState(false);
   const imgRef = useRef(null);
   const startData = useRef(null);
 
   const { src, alt, title, width, align, float, gap = 8, caption } = node.attrs;
+
+  let isStandalone = false;
+  if (typeof getPos === 'function') {
+    const pos = getPos();
+    if (typeof pos === 'number') {
+      isStandalone = editor.state.doc.resolve(pos).depth === 0;
+    }
+  }
 
   let wrapperStyle = {
     width: width ? `${width}px` : 'auto',
@@ -77,32 +85,53 @@ function ResizableImageComponent({ node, updateAttributes, selected }) {
     }
   }, [resizing, onMouseMove, onMouseUp]);
 
+  const handleClick = useCallback((e) => {
+    if (typeof getPos === 'function') {
+      editor.commands.setNodeSelection(getPos());
+    }
+  }, [getPos, editor]);
+
+  const handleContextMenu = useCallback((e) => {
+    if (typeof getPos === 'function') {
+      editor.commands.setNodeSelection(getPos());
+    }
+  }, [getPos, editor]);
+
   return (
-    <NodeViewWrapper as="span" className="image-resize-node">
+    <NodeViewWrapper 
+      as="div" 
+      className={`image-resize-node${isStandalone ? ' image-resize-node--standalone' : ''}`} 
+      onClick={handleClick} 
+      onContextMenu={handleContextMenu}
+    >
       <div
         className={`image-resize-wrapper ${selected ? 'selected' : ''}`}
         style={wrapperStyle}
       >
-        <img
-          ref={imgRef}
-          src={src}
-          alt={alt || ''}
-          title={title || ''}
-          style={{ width: '100%', height: 'auto' }}
-          draggable={false}
-        />
-        {selected && (
-          <>
-            <div className="image-resize-handle top-left" onMouseDown={(e) => onMouseDown(e, 'top-left')} />
-            <div className="image-resize-handle top-right" onMouseDown={(e) => onMouseDown(e, 'top-right')} />
-            <div className="image-resize-handle bottom-left" onMouseDown={(e) => onMouseDown(e, 'bottom-left')} />
-            <div className="image-resize-handle bottom-right" onMouseDown={(e) => onMouseDown(e, 'bottom-right')} />
-          </>
+        <div style={{ position: 'relative', display: 'block' }}>
+          <img
+            ref={imgRef}
+            src={src}
+            alt={alt || ''}
+            title={title || ''}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+            draggable={false}
+          />
+          {selected && (
+            <>
+              <div className="image-resize-handle top-left" onMouseDown={(e) => onMouseDown(e, 'top-left')} />
+              <div className="image-resize-handle top-right" onMouseDown={(e) => onMouseDown(e, 'top-right')} />
+              <div className="image-resize-handle bottom-left" onMouseDown={(e) => onMouseDown(e, 'bottom-left')} />
+              <div className="image-resize-handle bottom-right" onMouseDown={(e) => onMouseDown(e, 'bottom-right')} />
+            </>
+          )}
+        </div>
+        {caption && (
+          <figcaption className="image-caption" style={{ width: '100%', wordBreak: 'break-word', marginTop: '8px' }}>
+            {caption}
+          </figcaption>
         )}
       </div>
-      {caption && (
-        <figcaption className="image-caption">{caption}</figcaption>
-      )}
     </NodeViewWrapper>
   );
 }
