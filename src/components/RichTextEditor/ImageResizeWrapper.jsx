@@ -8,7 +8,7 @@ function ResizableImageComponent({ node, updateAttributes, selected }) {
   const imgRef = useRef(null);
   const startData = useRef(null);
 
-  const { src, alt, title, width, align, float, gap = 8 } = node.attrs;
+  const { src, alt, title, width, align, float, gap = 8, caption } = node.attrs;
 
   let wrapperStyle = {
     width: width ? `${width}px` : 'auto',
@@ -100,6 +100,9 @@ function ResizableImageComponent({ node, updateAttributes, selected }) {
           </>
         )}
       </div>
+      {caption && (
+        <figcaption className="image-caption">{caption}</figcaption>
+      )}
     </NodeViewWrapper>
   );
 }
@@ -120,6 +123,7 @@ const ResizableImage = Node.create({
       align: { default: 'center' },
       float: { default: 'none' },
       gap: { default: 8 },
+      caption: { default: null },
     };
   },
 

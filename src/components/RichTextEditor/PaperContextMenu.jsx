@@ -275,7 +275,7 @@ export default function PaperContextMenu({ position, onClose, paperSettings, onA
           </div>
         </div>
       )}
-
+      
       {view === 'typography' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px', width: '260px' }}>
           <h4 style={{ margin: 0, fontSize: '13px', color: 'var(--text-primary)', borderBottom: '1px solid var(--border-dark)', paddingBottom: '6px' }}>Typography</h4>

@@ -18,6 +18,7 @@ import {
   RemoveFormatting,
   Check,
   X,
+  FileText,
 } from 'lucide-react';
 import FontFamilyDropdown from './FontFamilyDropdown';
 import BgColorPicker from './BgColorPicker';
@@ -25,6 +26,7 @@ import BgColorPicker from './BgColorPicker';
 export default function BubbleToolbar({ editor }) {
   const [linkMode, setLinkMode] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [showImageDesc, setShowImageDesc] = useState(false);
 
   const isImageMenu = ({ editor }) => editor.isActive('image');
   const isTextMenu = ({ editor }) => !editor.isActive('image') && !editor.state.selection.empty;
@@ -51,6 +53,18 @@ export default function BubbleToolbar({ editor }) {
   }, []);
 
   if (!editor) return null;
+
+  const imgInputStyle = {
+    width: '100%',
+    height: '24px',
+    fontSize: '11.5px',
+    background: 'var(--toolbar-bg-hover)',
+    border: '1px solid var(--toolbar-border)',
+    borderRadius: '4px',
+    color: 'var(--text-primary)',
+    padding: '0 8px',
+    outline: 'none',
+  };
 
   return (
     <>
@@ -209,94 +223,142 @@ export default function BubbleToolbar({ editor }) {
         shouldShow={isImageMenu}
         className="rte-bubble-menu"
       >
-        <button
-          type="button"
-          className={`rte-toolbar-btn ${editor.getAttributes('image').align === 'left' && editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
-          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'left', float: 'none' }).run()}
-          title="Align Left"
-        >
-          <AlignLeft />
-        </button>
-        <button
-          type="button"
-          className={`rte-toolbar-btn ${editor.getAttributes('image').align === 'center' && editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
-          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center', float: 'none' }).run()}
-          title="Align Center"
-        >
-          <AlignCenter />
-        </button>
-        <button
-          type="button"
-          className={`rte-toolbar-btn ${editor.getAttributes('image').align === 'right' && editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
-          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'right', float: 'none' }).run()}
-          title="Align Right"
-        >
-          <AlignRight />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${editor.getAttributes('image').align === 'left' && editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
+              onClick={() => editor.chain().focus().updateAttributes('image', { align: 'left', float: 'none' }).run()}
+              title="Align Left"
+            >
+              <AlignLeft />
+            </button>
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${editor.getAttributes('image').align === 'center' && editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
+              onClick={() => editor.chain().focus().updateAttributes('image', { align: 'center', float: 'none' }).run()}
+              title="Align Center"
+            >
+              <AlignCenter />
+            </button>
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${editor.getAttributes('image').align === 'right' && editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
+              onClick={() => editor.chain().focus().updateAttributes('image', { align: 'right', float: 'none' }).run()}
+              title="Align Right"
+            >
+              <AlignRight />
+            </button>
 
-        <div className="rte-toolbar-divider" />
+            <div className="rte-toolbar-divider" />
 
-        <button
-          type="button"
-          className={`rte-toolbar-btn ${editor.getAttributes('image').float === 'left' ? 'active' : ''}`}
-          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'none', float: 'left' }).run()}
-          title="Float Left (Text Wraps)"
-        >
-          <PanelLeft />
-        </button>
-        <button
-          type="button"
-          className={`rte-toolbar-btn ${editor.getAttributes('image').float === 'right' ? 'active' : ''}`}
-          onClick={() => editor.chain().focus().updateAttributes('image', { align: 'none', float: 'right' }).run()}
-          title="Float Right (Text Wraps)"
-        >
-          <PanelRight />
-        </button>
-        <button
-          type="button"
-          className={`rte-toolbar-btn ${editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
-          onClick={() => editor.chain().focus().updateAttributes('image', { float: 'none' }).run()}
-          title="Reset Float"
-        >
-          <MonitorOff />
-        </button>
-        <div className="rte-toolbar-divider" />
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${editor.getAttributes('image').float === 'left' ? 'active' : ''}`}
+              onClick={() => editor.chain().focus().updateAttributes('image', { align: 'none', float: 'left' }).run()}
+              title="Float Left (Text Wraps)"
+            >
+              <PanelLeft />
+            </button>
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${editor.getAttributes('image').float === 'right' ? 'active' : ''}`}
+              onClick={() => editor.chain().focus().updateAttributes('image', { align: 'none', float: 'right' }).run()}
+              title="Float Right (Text Wraps)"
+            >
+              <PanelRight />
+            </button>
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${editor.getAttributes('image').float === 'none' ? 'active' : ''}`}
+              onClick={() => editor.chain().focus().updateAttributes('image', { float: 'none' }).run()}
+              title="Reset Float"
+            >
+              <MonitorOff />
+            </button>
+            <div className="rte-toolbar-divider" />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 6px' }}>
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Gap:</span>
-          <input
-            type="number"
-            value={editor.getAttributes('image').gap ?? 8}
-            onChange={(e) => {
-              let val = parseInt(e.target.value, 10);
-              if (isNaN(val)) val = 0;
-              editor.chain().updateAttributes('image', { gap: val }).run();
-            }}
-            style={{
-              width: '44px',
-              height: '24px',
-              fontSize: '12px',
-              background: 'var(--toolbar-bg-hover)',
-              border: '1px solid var(--toolbar-border)',
-              borderRadius: '4px',
-              color: 'var(--text-primary)',
-              textAlign: 'center',
-              outline: 'none',
-            }}
-          />
-          <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>px</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 6px' }}>
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>Gap:</span>
+              <input
+                type="number"
+                value={editor.getAttributes('image').gap ?? 8}
+                onChange={(e) => {
+                  let val = parseInt(e.target.value, 10);
+                  if (isNaN(val)) val = 0;
+                  editor.chain().updateAttributes('image', { gap: val }).run();
+                }}
+                style={{
+                  width: '44px',
+                  height: '24px',
+                  fontSize: '12px',
+                  background: 'var(--toolbar-bg-hover)',
+                  border: '1px solid var(--toolbar-border)',
+                  borderRadius: '4px',
+                  color: 'var(--text-primary)',
+                  textAlign: 'center',
+                  outline: 'none',
+                }}
+              />
+              <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>px</span>
+            </div>
+
+            <div className="rte-toolbar-divider" />
+
+            <button
+              type="button"
+              className={`rte-toolbar-btn ${showImageDesc ? 'active' : ''}`}
+              onClick={() => setShowImageDesc(!showImageDesc)}
+              title="Image Description"
+            >
+              <FileText />
+            </button>
+
+            <button
+              type="button"
+              className="rte-toolbar-btn"
+              onClick={() => editor.chain().focus().deleteSelection().run()}
+              title="Delete Image"
+            >
+              <Trash2 />
+            </button>
+          </div>
+
+          {showImageDesc && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', padding: '4px 6px', borderTop: '1px solid var(--toolbar-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', minWidth: '48px' }}>Alt Text</label>
+                <input
+                  type="text"
+                  placeholder="Describe the image for accessibility"
+                  value={editor.getAttributes('image').alt || ''}
+                  onChange={(e) => editor.chain().updateAttributes('image', { alt: e.target.value }).run()}
+                  style={imgInputStyle}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', minWidth: '48px' }}>Title</label>
+                <input
+                  type="text"
+                  placeholder="Tooltip shown on hover"
+                  value={editor.getAttributes('image').title || ''}
+                  onChange={(e) => editor.chain().updateAttributes('image', { title: e.target.value }).run()}
+                  style={imgInputStyle}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', minWidth: '48px' }}>Caption</label>
+                <input
+                  type="text"
+                  placeholder="Visible caption below image"
+                  value={editor.getAttributes('image').caption || ''}
+                  onChange={(e) => editor.chain().updateAttributes('image', { caption: e.target.value }).run()}
+                  style={imgInputStyle}
+                />
+              </div>
+            </div>
+          )}
         </div>
-
-        <div className="rte-toolbar-divider" />
-
-        <button
-          type="button"
-          className="rte-toolbar-btn"
-          onClick={() => editor.chain().focus().deleteSelection().run()}
-          title="Delete Image"
-        >
-          <Trash2 />
-        </button>
       </BubbleMenu>
     </>
   );

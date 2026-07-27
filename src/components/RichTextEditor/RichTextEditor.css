@@ -388,6 +388,16 @@
   border-radius: var(--radius-sm);
 }
 
+.image-caption {
+  display: block;
+  text-align: center;
+  font-size: 0.85em;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
 .image-resize-handle {
   position: absolute;
   width: 10px;
