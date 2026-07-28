@@ -34,7 +34,7 @@ import Toolbar from './Toolbar';
 import BubbleToolbar from './BubbleToolbar';
 import TableContextMenu from './TableContextMenu';
 import PaperContextMenu from './PaperContextMenu';
-import './RichTextEditor.css';
+import './RichTextEditor.scss';
 import { NodeSelection } from '@tiptap/pm/state';
 
 const RichTextEditor = forwardRef(function RichTextEditor(
