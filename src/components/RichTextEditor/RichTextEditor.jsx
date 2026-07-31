@@ -7,7 +7,6 @@ import {
 } from 'react';
 import { Plus, ImagePlus } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import Document from '@tiptap/extension-document';
 import { Node, mergeAttributes } from '@tiptap/core';
 
 const PageNode = Node.create({

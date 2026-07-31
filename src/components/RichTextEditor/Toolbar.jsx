@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import {
   Bold,
   Italic,
@@ -20,7 +20,9 @@ import {
   Quote,
   Code,
   Table as TableIcon,
+  Info,
 } from 'lucide-react';
+import ToolbarHelpModal from './ToolbarHelpModal';
 import HeadingDropdown from './HeadingDropdown';
 import FontFamilyDropdown from './FontFamilyDropdown';
 import ColorPicker from './ColorPicker';
@@ -37,6 +39,7 @@ export default function Toolbar({
   onExportPdf 
 }) {
   const fileInputRef = useRef(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleImageUpload = useCallback(() => {
     fileInputRef.current?.click();
@@ -199,6 +202,21 @@ export default function Toolbar({
           <span>PDF</span>
         </button>
       </div>
+
+      <div className="rte-toolbar-divider" />
+
+      <div className="rte-toolbar-group">
+        <button
+          type="button"
+          className="rte-toolbar-btn"
+          onClick={() => setIsHelpOpen(true)}
+          title="Toolbar Guide"
+        >
+          <Info />
+        </button>
+      </div>
+
+      {isHelpOpen && <ToolbarHelpModal onClose={() => setIsHelpOpen(false)} />}
     </div>
   );
 }

@@ -28,9 +28,6 @@ export default function TableContextMenu({ editor, position, onClose }) {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // If clicking inside the menu (either the main menu or settings), do not close.
-      // Wait, the main menu doesn't have a ref. We need a ref on the root container.
-      // Let's just use settingsRef for the root container!
       if (settingsRef.current && !settingsRef.current.contains(e.target)) {
         onClose();
         setShowSettings('none');
